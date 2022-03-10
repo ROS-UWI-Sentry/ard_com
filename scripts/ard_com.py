@@ -11,6 +11,7 @@ from std_msgs.msg import String
 from std_msgs.msg import Int32
 from std_msgs.msg import Float32
 
+from twist_to_motor_rps.msg import Num
 
 
                         ###note###
@@ -25,19 +26,36 @@ from std_msgs.msg import Float32
 
 #callback function for subscriber
 def callback(data):
-    rospy.loginfo("received data: " + data.data)
+    rospy.loginfo(data.num)
 
     #expecting a string in format s0.xxxx,s0.xxxx
     #where s is the sign (positve + or negative -)
     #and x is the numerical value)
-    temp = data.data
-    format_left = temp[0:7] #"{:.4f}".format(temp[0:7])
-    format_right = temp[8:15] #"{:.4f}".format(temp[8:15])
+    
+    format_left = "{:.4f}".format(data.num[0])
+    format_right = "{:.4f}".format(data.num[1])
+    
     if format_left == "-0.0000":
         format_left="+0.0000"
 
+
+    if data.num[0]==0:
+       format_left="+"+format_left
+
+    if data.num[0]>0:
+       format_left="+"+format_left
+
+
+
     if format_right=="-0.0000":
         format_right="+0.0000"
+
+    if data.num[1]==0:
+        format_right="+"+format_right
+    
+    if data.num[1]>0:
+        format_right="+"+format_right
+
 
 
     x = ':1,'+format_left+','+format_right
@@ -46,7 +64,7 @@ def callback(data):
 
 #this function is for subscribing to messages
 def listener():
-    rospy.Subscriber('ard_com_in', String, callback)
+    rospy.Subscriber('wheel_vel_vector', Num, callback)
     #sleep value
     rate = rospy.Rate(100)#100Hz
     rospy.loginfo("Node Alive")
