@@ -13,7 +13,11 @@ from std_msgs.msg import Float32
 
 from twist_to_motor_rps.msg import Num
 
-
+# Downsampling
+global ii
+ii=0
+global runn
+runn=0
                         ###note###
 # ____________________________________________________
 #|ROS node for communicating with the serial port     |
@@ -26,7 +30,9 @@ from twist_to_motor_rps.msg import Num
 
 #callback function for subscriber
 def callback(data):
-    rospy.loginfo(data.num)
+    global ii
+    global runn
+    #rospy.loginfo(data.num)
 
     #expecting a string in format s0.xxxx,s0.xxxx
     #where s is the sign (positve + or negative -)
@@ -59,9 +65,13 @@ def callback(data):
 
 
     x = ':1,'+format_left+','+format_right
-    rospy.loginfo("serial write data: " + x)
-    ser.write(x)
-
+   
+    #rospy.loginfo("serial write data: " + x)
+    ii=ii+1
+    if ii>20:
+        rospy.loginfo("serial write data: " + x)
+        ser.write(x)
+        ii=0
 #this function is for subscribing to messages
 def listener():
     rospy.Subscriber('wheel_vel_vector', Num, callback)
@@ -90,7 +100,11 @@ if __name__=='__main__':
         bytesize=serial.EIGHTBITS,
         timeout=0.1
     )
-
+    if runn==0:
+        x = ':1,+0.0000,+0.0000'
+        ser.write(x)
+        runn=1
+  
     #start the subscriber
     try:
         listener()
