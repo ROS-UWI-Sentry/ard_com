@@ -13,11 +13,10 @@ from std_msgs.msg import Float32
 
 from twist_to_motor_rps.msg import Num
 
-# Downsampling
-global ii
-ii=0
+global motor_data
 global runn #key 0: startup, 1: ready to read, 2: ready to write
 runn=0
+
                         ###note###
 # ____________________________________________________
 #|ROS node for communicating with the serial port     |
@@ -30,77 +29,62 @@ runn=0
 
 #callback function for subscriber
 def callback(data):
-    global ii
-    global runn
-    #rospy.loginfo(data.num)
-
+    global runn, motor_data
     #expecting a string in format s0.xxxx,s0.xxxx
     #where s is the sign (positve + or negative -)
     #and x is the numerical value)
-
-
-#wait for a readcommand
-    y=ser.readline()
-    if runn==1:
-        if len(y)>5:
-            rospy.loginfo("speed: "+y)
-            runn=2 #set we have read something go ahead to write.
     
-            format_left = "{:.4f}".format(data.num[0])
-            format_right = "{:.4f}".format(data.num[1])
+    format_left = "{:.4f}".format(data.num[0])
+    format_right = "{:.4f}".format(data.num[1])
     
-            if format_left == "-0.0000":
-                format_left="+0.0000"
+    if format_left == "-0.0000":
+          format_left="+0.0000"
 
+    if data.num[0]==0:
+          format_left="+"+format_left
 
-            if data.num[0]==0:
-               format_left="+"+format_left
+    if data.num[0]>0:
+          format_left="+"+format_left
 
-            if data.num[0]>0:
-               format_left="+"+format_left
+    if format_right=="-0.0000":
+          format_right="+0.0000"
 
-
-
-            if format_right=="-0.0000":
-                format_right="+0.0000"
-
-            if data.num[1]==0:
-                format_right="+"+format_right
+    if data.num[1]==0:
+          format_right="+"+format_right
     
-            if data.num[1]>0:
-                format_right="+"+format_right
+    if data.num[1]>0:
+          format_right="+"+format_right
+
+    motor_data = ':1,'+format_left+','+format_right
+
+
+    #y=ser.readline()
 
 
 
-            x = ':1,'+format_left+','+format_right
-   
-            #rospy.loginfo("serial write data: " + x)
-        if runn==2:
-            #ii=ii+1
-            #if ii>10:
-            rospy.loginfo("serial write data: " + x)
-            ser.write(x)
-
-            rate = rospy.Rate(3000)
-            rate.sleep()
-            runn=1
-
-            #ii=0
-
-        #rospy.loginfo("serial write data: " + x)
-        #ser.write(x)
        
 
 #this function is for subscribing to messages
 def listener():
     rospy.Subscriber('wheel_vel_vector', Num, callback)
     #sleep value
-    rate = rospy.Rate(100)#100Hz
-    rospy.loginfo("Node Alive")
-    #rospy.loginfo("inside listener")
-    #spin() keeps python from exiting
-    rospy.spin()
-    
+    rate = rospy.Rate(5)#In Hz
+    global runn, motor_data 
+    rospy.loginfo("Arduino Communication Node Ready")
+
+    while not rospy.is_shutdown():
+        #wait for a readcommand
+        if runn==1:
+            if ser.in_waiting:
+            #if len(y)>5:
+                rospy.loginfo(ser.in_waiting)
+                rospy.loginfo("speed: "+ser.read_until())#'\n' by default
+                rospy.loginfo(ser.in_waiting)
+                rospy.loginfo("serial write data: " + motor_data + '\n')
+                ser.write(motor_data + '\n')   
+                rate.sleep()
+
+   
 
 
 if __name__=='__main__':
@@ -121,24 +105,9 @@ if __name__=='__main__':
     )
 #on startup brake
     if runn==0:
-        x = ':1,+0.0000,+0.0000'
-        ser.write(x)
+        motor_data = ':1,+0.0000,+0.0000'
+        ser.write(motor_data + '\n')
         runn=1
-
-#wait for a readcommand
-#    y=ser.readline()
-#    if runn==1:
-#        if len(y)>5:
-#            rospy.loginfo("speed: "+y)
-#            runn=2 #set we have read something go ahead to write.
-
-
-
-#To ensure the wheels are not spinning at startup
-    #x = ':1,+0.0000,+0.0000'
-    #ser.write(x)
-    
-    #start the subscriber
     try:
         listener()
     except rospy.ROSInterruptException:
