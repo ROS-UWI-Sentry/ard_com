@@ -71,16 +71,27 @@ def listener():
     rate = rospy.Rate(5)#In Hz
     global runn, motor_data 
     rospy.loginfo("Arduino Communication Node Ready")
-
+    encoder_velocity_l = 0.0
+    encoder_velocity_r = 0.0
+    
     while not rospy.is_shutdown():
         #wait for a readcommand
         if runn==1:
             if ser.in_waiting:
             #if len(y)>5:
-                rospy.loginfo(ser.in_waiting)
-                rospy.loginfo("speed: "+ser.read_until())#'\n' by default
-                rospy.loginfo(ser.in_waiting)
-                rospy.loginfo("serial write data: " + motor_data + '\n')
+                #rospy.loginfo(ser.in_waiting)
+                #rospy.loginfo("speed: "+ser.read_until()) #'\n' by default
+                serial_data_in = ser.read_until()
+		print("original serial data: " + str(serial_data_in)) 
+		encoder_velocity_r = float(serial_data_in.split(',')[1])
+		print("encoder right velocity: " + str(encoder_velocity_r))
+		encoder_velocity_l = float(serial_data_in.split(',')[0])
+		print("encoder left velocity: " + str(encoder_velocity_l))
+
+		#print("speed: "+ser.read_until())
+                #rospy.loginfo(ser.in_waiting)
+                #rospy.loginfo("serial write data: " + motor_data + '\n')
+                print("serial write data: " + motor_data + '\n')
                 ser.write(motor_data + '\n')   
                 rate.sleep()
 
