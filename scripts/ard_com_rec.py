@@ -71,9 +71,9 @@ def listener():
     rate = rospy.Rate(5)#In Hz
     global runn, motor_data 
     rospy.loginfo("Arduino Communication Node Ready")
-    encoder_velocity_l = 0.0
-    encoder_velocity_r = 0.0
-    
+    encoder_rps_l = 0.0
+    encoder_rps_r = 0.0
+    encoder_rps = [0,0]
     while not rospy.is_shutdown():
         #wait for a readcommand
         if runn==1:
@@ -83,11 +83,14 @@ def listener():
                 #rospy.loginfo("speed: "+ser.read_until()) #'\n' by default
                 serial_data_in = ser.read_until()
 		print("original serial data: " + str(serial_data_in)) 
-		encoder_velocity_r = float(serial_data_in.split(',')[1])
-		print("encoder right velocity: " + str(encoder_velocity_r))
-		encoder_velocity_l = float(serial_data_in.split(',')[0])
-		print("encoder left velocity: " + str(encoder_velocity_l))
-
+		encoder_rps_r = float(serial_data_in.split(',')[1])
+		print("encoder right rps: " + str(encoder_rps_r))
+		encoder_rps_l = float(serial_data_in.split(',')[0])
+		print("encoder left rps: " + str(encoder_rps_l))
+		encoder_rps[0]=encoder_rps_l
+ 		encoder_rps[1]=encoder_rps_r
+                pub_encoder.publish(encoder_rps)
+		print(encoder_rps)
 		#print("speed: "+ser.read_until())
                 #rospy.loginfo(ser.in_waiting)
                 #rospy.loginfo("serial write data: " + motor_data + '\n')
@@ -104,6 +107,7 @@ if __name__=='__main__':
 
     #create a publisher object and define which topic it subscribes to
     pub = rospy.Publisher('ard_com_out', String, queue_size=500)
+    pub_encoder = rospy.Publisher('encoder_rps', Num, queue_size=500)
 
     #setup serial object
     ser = serial.Serial(
