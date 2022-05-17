@@ -66,7 +66,7 @@ def callback(data):
 
 #this function is for subscribing to messages
 def listener():
-    rospy.Subscriber('wheel_vel_vector', Num, callback)
+    rospy.Subscriber('wheel_rps_vector', Num, callback)
     #sleep value
     rate = rospy.Rate(5)#In Hz
     global runn, motor_data 
