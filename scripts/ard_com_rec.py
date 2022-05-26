@@ -3,7 +3,7 @@
 
 import time 
 import serial
-
+import re
 
 import rospy
 from std_msgs.msg import Bool
@@ -82,15 +82,26 @@ def listener():
                 #rospy.loginfo(ser.in_waiting)
                 #rospy.loginfo("speed: "+ser.read_until()) #'\n' by default
                 serial_data_in = ser.read_until()
-		print("original serial data: " + str(serial_data_in)) 
-		encoder_rps_r = float(serial_data_in.split(',')[1])
-		print("encoder right rps: " + str(encoder_rps_r))
-		encoder_rps_l = float(serial_data_in.split(',')[0])
-		print("encoder left rps: " + str(encoder_rps_l))
-		encoder_rps[0]=encoder_rps_l
- 		encoder_rps[1]=encoder_rps_r
+                print("original serial data: " + str(serial_data_in))
+                #print right wheel rps
+                enc_str_rspr = re.sub('[^0-9.]', '', serial_data_in.split(',')[1])
+                if '-' in serial_data_in.split(',')[1]:
+                    encoder_rps_r = -1*float (enc_str_rspr)
+                else:
+                    encoder_rps_r = float (enc_str_rspr)
+                print("encoder right rps: " + str(encoder_rps_r))
+
+                enc_str_rspl = re.sub('[^0-9.]', '', serial_data_in.split(',')[0])
+                if '-' in serial_data_in.split(',')[0]:
+                    encoder_rps_l = -1*float (enc_str_rspl)
+                else:
+                    encoder_rps_l = float (enc_str_rspl)
+                print("encoder left rps: " + str(encoder_rps_l))
+                
+                encoder_rps[0]=encoder_rps_l
+                encoder_rps[1]=encoder_rps_r
                 pub_encoder.publish(encoder_rps)
-		print(encoder_rps)
+                print(encoder_rps)
 		#print("speed: "+ser.read_until())
                 #rospy.loginfo(ser.in_waiting)
                 #rospy.loginfo("serial write data: " + motor_data + '\n')
