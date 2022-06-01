@@ -82,7 +82,7 @@ def listener():
                 #rospy.loginfo(ser.in_waiting)
                 #rospy.loginfo("speed: "+ser.read_until()) #'\n' by default
                 serial_data_in = ser.read_until()
-                print("original serial data: " + str(serial_data_in))
+                print("Arduino to AGX serial data: " + str(serial_data_in))
                 #print right wheel rps
                 enc_str_rspr = re.sub('[^0-9.]', '', serial_data_in.split(',')[1])
                 if '-' in serial_data_in.split(',')[1]:
@@ -105,7 +105,7 @@ def listener():
 		#print("speed: "+ser.read_until())
                 #rospy.loginfo(ser.in_waiting)
                 #rospy.loginfo("serial write data: " + motor_data + '\n')
-                print("serial write data: " + motor_data + '\n')
+                print("AGX to Arduino serial data: " + motor_data + '\n')
                 ser.write(motor_data + '\n')   
                 rate.sleep()
 
